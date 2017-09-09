@@ -1,12 +1,14 @@
 package steam_go
 
 import (
+	"bytes"
 	"errors"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"regexp"
 	"strings"
+	"github.com/valyala/fasthttp"
 )
 
 var (
@@ -23,29 +25,29 @@ var (
 type OpenId struct {
 	root      string
 	returnUrl string
-	data      url.Values
+	data      *fasthttp.Args
 }
 
-func NewOpenId(r *http.Request) *OpenId {
+func NewOpenId(ctx *fasthttp.RequestCtx) *OpenId {
 	id := new(OpenId)
 
 	proto := "http://"
-	if r.TLS != nil {
+	if ctx.IsTLS() {
 		proto = "https://"
 	}
-	id.root = proto + r.Host
+	id.root = proto + string(ctx.Host())
 
-	uri := r.RequestURI
+	uri := string(ctx.RequestURI())
 	if i := strings.Index(uri, "openid"); i != -1 {
 		uri = uri[0 : i-1]
 	}
 	id.returnUrl = id.root + uri
 
-	switch r.Method {
+	switch string(ctx.Method()) {
 	case "POST":
-		id.data = r.Form
+		id.data = ctx.Request.PostArgs()
 	case "GET":
-		id.data = r.URL.Query()
+		id.data = ctx.URI().QueryArgs()
 	}
 
 	return id
@@ -74,23 +76,23 @@ func (id OpenId) AuthUrl() string {
 }
 
 func (id *OpenId) ValidateAndGetId() (string, error) {
-	if id.Mode() != "id_res" {
+	if bytes.Equal(id.Mode(), []byte("id_res") ) {
 		return "", errors.New("Mode must equal to \"id_res\".")
 	}
 
-	if id.data.Get("openid.return_to") != id.returnUrl {
+	if bytes.Equal(id.data.Peek("openid.return_to"), []byte(id.returnUrl)) {
 		return "", errors.New("The \"return_to url\" must match the url of current request.")
 	}
 
 	params := make(url.Values)
-	params.Set("openid.assoc_handle", id.data.Get("openid.assoc_handle"))
-	params.Set("openid.signed", id.data.Get("openid.signed"))
-	params.Set("openid.sig", id.data.Get("openid.sig"))
-	params.Set("openid.ns", id.data.Get("openid.ns"))
+	params.Set("openid.assoc_handle", string(id.data.Peek("openid.assoc_handle")))
+	params.Set("openid.signed", string(id.data.Peek("openid.signed")))
+	params.Set("openid.sig", string(id.data.Peek("openid.sig")))
+	params.Set("openid.ns", string(id.data.Peek("openid.ns")))
 
-	split := strings.Split(id.data.Get("openid.signed"), ",")
+	split := strings.Split(string(id.data.Peek("openid.signed")), ",")
 	for _, item := range split {
-		params.Set("openid."+item, id.data.Get("openid."+item))
+		params.Set("openid."+item, string(id.data.Peek("openid."+item)))
 	}
 	params.Set("openid.mode", "check_authentication")
 
@@ -112,7 +114,7 @@ func (id *OpenId) ValidateAndGetId() (string, error) {
 		return "", errors.New("Unable validate openId.")
 	}
 
-	openIdUrl := id.data.Get("openid.claimed_id")
+	openIdUrl := string(id.data.Peek("openid.claimed_id"))
 	if !validation_regexp.MatchString(openIdUrl) {
 		return "", errors.New("Invalid steam id pattern.")
 	}
@@ -128,6 +130,6 @@ func (id OpenId) ValidateAndGetUser(apiKey string) (*PlayerSummaries, error) {
 	return GetPlayerSummaries(steamId, apiKey)
 }
 
-func (id OpenId) Mode() string {
-	return id.data.Get("openid.mode")
+func (id OpenId) Mode() []byte {
+	return id.data.Peek("openid.mode")
 }
