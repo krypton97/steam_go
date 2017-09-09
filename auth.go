@@ -76,11 +76,11 @@ func (id OpenId) AuthUrl() string {
 }
 
 func (id *OpenId) ValidateAndGetId() (string, error) {
-	if bytes.Equal(id.Mode(), []byte("id_res") ) {
+	if !bytes.Equal(id.Mode(), []byte("id_res") ) {
 		return "", errors.New("Mode must equal to \"id_res\".")
 	}
 
-	if bytes.Equal(id.data.Peek("openid.return_to"), []byte(id.returnUrl)) {
+	if !bytes.Equal(id.data.Peek("openid.return_to"), []byte(id.returnUrl)) {
 		return "", errors.New("The \"return_to url\" must match the url of current request.")
 	}
 
