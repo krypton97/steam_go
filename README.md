@@ -3,7 +3,7 @@
 
 ### Installation
 ```
-$ go get github.com/solovev/steam_go
+$ go get github.com/krypton97/steam_go
 ```
 ### Usage
 Just <code>go run main.go</code> in example dir and open [localhost:8081/login](http://localhost:8081/login) link to see how it works
