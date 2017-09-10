@@ -42,35 +42,26 @@ func NewOpenId(ctx *fasthttp.RequestCtx) *OpenId {
 		uri = uri[0 : i-1]
 	}
 	id.returnUrl = id.root + uri
-
-	switch string(ctx.Method()) {
-	case "POST":
+	
+	if ctx.isPost() {
 		id.data = ctx.Request.PostArgs()
-	case "GET":
-		id.data = ctx.URI().QueryArgs()
+	} else if ctx.isGet() {
+		id.data = ctx.Request.PostArgs()
 	}
 
 	return id
 }
 
 func (id OpenId) AuthUrl() string {
-	data := map[string]string{
-		"openid.claimed_id": openId_identifier,
-		"openid.identity":   openId_identifier,
-		"openid.mode":       openId_mode,
-		"openid.ns":         openId_ns,
-		"openid.realm":      id.root,
-		"openid.return_to":  id.returnUrl,
-	}
+	keys := [...]string{ "openid.claimed_id", "openid.identity", "openid.mode", "openid.ns", "openid.realm", "openid.return_to"}
+	values := [...]string{ openId_identifier, openId_identifier, openId_mode, openId_ns, id.root, id.returnUrl }
 
-	i := 0
 	url := steam_login + "?"
-	for key, value := range data {
-		url += key + "=" + value
-		if i != len(data)-1 {
+	for i := 0; i < len(keys); i++ {
+	    uri += keys[i] + "=" + values[i]
+		if i != len(keys) - 1 {
 			url += "&"
 		}
-		i++
 	}
 	return url
 }
