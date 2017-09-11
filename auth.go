@@ -43,7 +43,7 @@ func NewOpenId(ctx *fasthttp.RequestCtx) *OpenId {
 	if ctx.IsPost() {
 		id.data = ctx.Request.PostArgs()
 	} else if ctx.IsGet() {
-		id.data = ctx.Request.PostArgs()
+		id.data = ctx.Request.QueryArgs()
 	}
 
 	return id
