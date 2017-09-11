@@ -3,7 +3,6 @@ package steam_go
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	
 	"github.com/valyala/fasthttp"
 )
