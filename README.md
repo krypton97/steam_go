@@ -13,32 +13,40 @@ Code from ./example/main.go:
 package main
 
 import (
+	"bytes"
 	"net/http"
 
-	"github.com/solovev/steam_go"
+	"github.com/krypton97/steam_go"
+	"github.com/valyala/fasthttp"
 )
 
-func loginHandler(w http.ResponseWriter, r *http.Request) {
-	opId := steam_go.NewOpenId(r)
-	switch opId.Mode() {
-	case "":
-		http.Redirect(w, r, opId.AuthUrl(), 301)
-	case "cancel":
-		w.Write([]byte("Authorization cancelled"))
-	default:
-		steamId, err := opId.ValidateAndGetId()
+var apiKey = []byte("75BEBCDB358BDE8BF6CA916938F12231")
+
+func loginHandler(ctx *fasthttp.RequestCtx) {
+	opID := steam_go.NewOpenId(ctx)
+	mode := opID.Mode()
+	if bytes.Equal(mode, []byte("")) {
+		ctx.Redirect(opID.AuthUrl(), 301)
+	} else if bytes.Equal(mode, []byte("cancel")) {
+		ctx.Write([]byte("Authorization cancelled"))
+	} else {
+		steamID, err := opID.ValidateAndGetId()
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			ctx.Error(err.Error(), http.StatusInternalServerError)
 		}
 
 		// Do whatever you want with steam id
-		w.Write([]byte(steamId))
+		user, err := steam_go.GetPlayerSummaries(steamID, apiKey)
+		if err != nil {
+			ctx.Write([]byte("No user found!"))
+		} else {
+			ctx.Write([]byte(user.PersonaName))
+		}
 	}
 }
 
 func main() {
-	http.HandleFunc("/login", loginHandler)
-	http.ListenAndServe(":8081", nil)
+	fasthttp.ListenAndServe(":3000", loginHandler)
 }
 
 ```
