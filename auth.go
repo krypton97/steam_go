@@ -3,9 +3,6 @@ package steam_go
 import (
 	"bytes"
 	"errors"
-	"io/ioutil"
-	"net/http"
-	"net/url"
 	"regexp"
 	"strings"
 	"github.com/valyala/fasthttp"
@@ -43,9 +40,9 @@ func NewOpenId(ctx *fasthttp.RequestCtx) *OpenId {
 	}
 	id.returnUrl = id.root + uri
 	
-	if ctx.isPost() {
+	if ctx.IsPost() {
 		id.data = ctx.Request.PostArgs()
-	} else if ctx.isGet() {
+	} else if ctx.IsGet() {
 		id.data = ctx.Request.PostArgs()
 	}
 
