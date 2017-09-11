@@ -105,12 +105,12 @@ func (id *OpenId) ValidateAndGetId() ([]byte, error) {
 	return digits_extraction_regexp.ReplaceAll(openIdUrl, []byte("")), nil
 }
 
-func (id OpenId) ValidateAndGetUser(apiKey string) (*PlayerSummaries, error) {
+func (id OpenId) ValidateAndGetUser(apiKey []byte) (*PlayerSummaries, error) {
 	steamId, err := id.ValidateAndGetId()
 	if err != nil {
 		return nil, err
 	}
-	return GetPlayerSummaries(string(steamId), apiKey)
+	return GetPlayerSummaries(steamId, apiKey)
 }
 
 func (id OpenId) Mode() []byte {
