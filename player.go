@@ -31,7 +31,7 @@ type PlayerSummaries struct {
 	GameServerIp      string `json:"gameserverip"`
 }
 
-func GetPlayerSummaries(steamId, apiKey string) (*PlayerSummaries, error) {
+func GetPlayerSummaries(steamId, apiKey []byte) (*PlayerSummaries, error) {
 	url := fmt.Sprintf("http://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/?key=%s&steamids=%s", apiKey, steamId)
 	_, body, err := fasthttp.Get(nil, url)
 	if err != nil {
