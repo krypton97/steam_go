@@ -55,7 +55,7 @@ func (id OpenId) AuthUrl() string {
 
 	url := steam_login + "?"
 	for i := 0; i < len(keys); i++ {
-	    uri += keys[i] + "=" + values[i]
+	    url += keys[i] + "=" + values[i]
 		if i != len(keys) - 1 {
 			url += "&"
 		}
