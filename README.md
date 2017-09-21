@@ -25,24 +25,25 @@ var apiKey = []byte("75BEBCDB358BDE8BF6CA916938F12231")
 func loginHandler(ctx *fasthttp.RequestCtx) {
 	opID := steam_go.NewOpenId(ctx)
 	switch true {
-		case bytes.Equal(opID.Mode(), []byte("")):
-			ctx.Redirect(opID.AuthUrl(), 301)
-		case bytes.Equal(opID.Mode(), []byte("cancel")):
-			ctx.Write([]byte("Authorization cancelled"))
-		default:
-			steamID, err := opID.ValidateAndGetId()
-			if err != nil {
-				ctx.Error(err.Error(), http.StatusInternalServerError)
-			}
-			// Do whatever you want with steam id
-			user, err := steam_go.GetPlayerSummaries(steamID, apiKey)
-			if err != nil {
-				ctx.Write([]byte("No user found!"))
-			} else {
-				ctx.Write([]byte(user.PersonaName))
-			}
+	case bytes.Equal(opID.Mode(), []byte("")):
+		ctx.Redirect(opID.AuthUrl(), 301)
+	case bytes.Equal(opID.Mode(), []byte("cancel")):
+		ctx.Write([]byte("Authorization cancelled"))
+	default:
+		steamID, err := opID.ValidateAndGetId()
+		if err != nil {
+			ctx.Error(err.Error(), http.StatusInternalServerError)
+		}
+		// Do whatever you want with steam id
+		user, err := steam_go.GetPlayerSummaries(steamID, apiKey)
+		if err != nil {
+			ctx.Write([]byte("No user found!"))
+		} else {
+			ctx.Write([]byte(user.PersonaName))
+		}
 	}
 }
+
 
 func main() {
 	fasthttp.ListenAndServe(":3000", loginHandler)
